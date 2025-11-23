@@ -1,29 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-  // Initialize Supabase with your REAL project URL + anon key
-  await Supabase.initialize(
-    url: 'https://xlinwaqckqvdvayeupis.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsaW53YXFja3F2ZHZheWV1cGlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4NDMzNjcsImV4cCI6MjA3OTQxOTM2N30.V3aiOFcHVxYhTj9VTvRsSPZl0ACGK3aCsQfUdXES2cA',
-  );
-
-  runApp(const MyApp());
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _LoginScreenState extends State<LoginScreen> {
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
+  bool loading = false;
+
+  Future<void> _signIn() async {
+    setState(() => loading = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+
+      await supabase.auth.signInWithPassword(
+        email: emailCtrl.text.trim(),
+        password: passCtrl.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login successful')),
+      );
+
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unexpected error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Henson Field App',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const LoginScreen(),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: emailCtrl,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: loading ? null : _signIn,
+              child: loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text("Sign In"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
