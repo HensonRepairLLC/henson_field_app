@@ -13,9 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # -----------------------------
-    # Install Flutter manually (works on ALL Windows runners)
-    # -----------------------------
+    # Install Flutter manually
     - name: Download Flutter SDK
       run: |
         Invoke-WebRequest https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.5-stable.zip -OutFile flutter.zip
@@ -28,33 +26,25 @@ jobs:
     - name: Flutter Doctor
       run: flutter doctor -v
 
-    # -----------------------------
     # Generate desktop project if missing
-    # -----------------------------
-    - name: Generate windows/ if missing
+    - name: Generate windows folder if missing
       run: |
         if (!(Test-Path "windows")) {
-          Write-Host "⚠️ Missing windows/ folder — running flutter create"
+          Write-Host "Windows folder missing - generating"
           flutter create .
         } else {
-          Write-Host "windows/ folder found"
+          Write-Host "Windows folder exists"
         }
 
-    # -----------------------------
-    # Install dependencies
-    # -----------------------------
+    # Get dependencies
     - name: Install packages
       run: flutter pub get
 
-    # -----------------------------
     # Build EXE
-    # -----------------------------
     - name: Build Windows Release
       run: flutter build windows --release
 
-    # -----------------------------
-    # Upload built files
-    # -----------------------------
+    # Upload EXE
     - name: Upload build output
       uses: actions/upload-artifact@v4
       with:
