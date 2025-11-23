@@ -2,7 +2,8 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
   workflow_dispatch:
 
 jobs:
@@ -10,43 +11,38 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Install Flutter manually
-    - name: Download Flutter SDK
-      run: |
-        Invoke-WebRequest https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.5-stable.zip -OutFile flutter.zip
-        Expand-Archive flutter.zip -DestinationPath $Env:UserProfile
-        echo "$Env:UserProfile\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install Flutter manually
+        run: |
+          Invoke-WebRequest https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.5-stable.zip -OutFile flutter.zip
+          Expand-Archive flutter.zip -DestinationPath $Env:UserProfile
+          echo "$Env:UserProfile\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - name: Check Flutter version
-      run: flutter --version
+      - name: Check Flutter version
+        run: flutter --version
 
-    - name: Flutter Doctor
-      run: flutter doctor -v
+      - name: Flutter Doctor
+        run: flutter doctor -v
 
-    # Generate desktop project if missing
-    - name: Generate windows folder if missing
-      run: |
-        if (!(Test-Path "windows")) {
-          Write-Host "Windows folder missing - generating"
-          flutter create .
-        } else {
-          Write-Host "Windows folder exists"
-        }
+      - name: Generate windows folder if missing
+        run: |
+          if (!(Test-Path "windows")) {
+            Write-Host "Windows folder missing - generating"
+            flutter create .
+          } else {
+            Write-Host "Windows folder exists"
+          }
 
-    # Get dependencies
-    - name: Install packages
-      run: flutter pub get
+      - name: Install packages
+        run: flutter pub get
 
-    # Build EXE
-    - name: Build Windows Release
-      run: flutter build windows --release
+      - name: Build Windows Release
+        run: flutter build windows --release
 
-    # Upload EXE
-    - name: Upload build output
-      uses: actions/upload-artifact@v4
-      with:
-        name: henson-field-app-windows
-        path: build/windows/x64/runner/Release/
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: henson-field-app-windows
+          path: build/windows/x64/runner/Release/
